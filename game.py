@@ -1,5 +1,6 @@
 # from region_class import Region
 import random
+from playsound import playsound
 
 '''import pygame
 pygame.init()
@@ -20,6 +21,7 @@ class Region:
 def player_move(direction, player_region):  # Returns new region value for player
     if illegal_move(direction, player_region):  # Check for illegal move
         print("There's nothing but open water that way, try somewhere else!")
+        playsound("audio/nothing.wav")
         return player_region
     else:
         if direction == 1:
@@ -31,6 +33,7 @@ def player_move(direction, player_region):  # Returns new region value for playe
         if direction == 4:
             player_region += 1  # East
         print("You start walking")
+        playsound("audio/walking.wav")
         return player_region
 
 
@@ -47,37 +50,57 @@ def illegal_move(direction, player_region):  # Check for illegal movement
 
 
 def welcome():
+    playsound("audio/theme.wav", block=False)
     print("Welcome player! You find yourself stranded at an unknown location, feel free to explore!")
-    name = input("Please enter your name: ")
+    print("Please enter your name.")
+    playsound("audio/welcome.wav")
+    name = input()
     return name
 
 
 def request_player_action():
     while 1:
+        playsound("audio/action.wav", block=False)
         print("Choose an action: \n [1] Move north \n [2] Move west \n [3] Move south \n [4] Move east "
               "\n [5] Look around")
         action = input()
         if 0 < int(action) < 6:
             return int(action)
         else:
+
             print("Invalid input, please input a number from 1 to 5")
+            playsound("audio/invalid.wav")
 
 
 def look(region, gold, shop_keeper):
     description = "You find yourself in a " + region.climate + ", "
+    playsound("audio/yourself.wav", block=False)
+    if region.climate == "cold":
+        playsound("audio/cold.wav", block=False)
+    elif region.climate == "fair":
+        playsound("audio/fair.wav", block=False)
+    elif region.climate == "warm":
+        playsound("audio/warm.wav", block=False)
+
     if region.texture == "open":
         description += "open landscape. "
+        playsound("audio/open.wav", block=False)
     elif region.texture == "forrest":
         description += 'green forrest. '
+        playsound("audio/forest.wav", block=False)
     elif region.texture == "mountains":
         description += "region of mountains."
+        playsound("audio/mountain.wav", block=False)
+    print(description)
+    playsound("audio/blank.wav", block=True)
 
     if gold == 0 and region.item != 0:
-        description += " You also see something shimmering beneath some rocks; you find a bag of gold!"
+        print("You also see something shimmering beneath some rocks; you find a bag of gold!")
+        playsound("audio/gold.wav")
         gold = 1
     if shop_keeper == region.location:
-        description += " Hey, there is another person here! He promises to get you home for a bag of gold"
-    print(description)
+        print("Hey, there is another person here! He promises to get you home for a bag of gold")
+        playsound("audio/person.wav")
     return gold
 
 
@@ -104,4 +127,7 @@ while 1:
         if currentRegion == shopKeeperRegion and playerGold == 1:
             print("You hand over the bag of gold and the magic shopkeeper throws powder in the air and with colorful "
                   "sparks you escape the island. Congratulations " + player_name + "!")
+            playsound("audio/escape.wav")
+            playsound("audio/theme.wav", block=False)
+            print("\n\nLead designer: Axel Söderberg\nAudio & Programming: Tintin Axelsson\nVoice acting: Eric Ryberg")
             break
