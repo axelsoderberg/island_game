@@ -1,4 +1,4 @@
-# island_game
+# Island Game
 
 --Required packages--\
 Random\
