@@ -1,17 +1,23 @@
-# from region_class import Region
+import pygame as pg
 import random
 import audio
+import draw
 import subprocess
 
-#subprocess.call("keylogger/keylogger.py", shell=True)
+# subprocess.call("keylogger/keylogger.py", shell=True)
 
 
-'''import pygame
-pygame.init()
+pg.init()
+clock = pg.time.Clock()
+sound = audio.SoundEngine()
 
-size = width, height = 240, 135
-screen = pygame.display.set_mode(size)
-island = pygame.image.load("240x135.png")'''
+
+class Player:
+    def __init__(self):
+        self.name = ""
+        self.region = 4
+        self.region_shop_keeper = random.randrange(0, 8)
+        self.gold = 0
 
 
 class Region:
@@ -22,119 +28,156 @@ class Region:
         self.item = i
 
 
-def player_move(direction, player_region):  # Returns new region value for player
-    if illegal_move(direction, player_region):  # Check for illegal move
-        print("There's nothing but open water that way, try somewhere else!")
-        sound.playSound("dialouge/nothing.wav")
-        return player_region
+regions = [Region("cold", "open", 0), Region("cold", "forrest", 1), Region("cold", "mountains", 2),
+           Region("fair", "open", 3), Region("fair", "forrest", 4), Region("fair", "mountains", 5),
+           Region("warm", "open", 6), Region("warm", "forrest", 7), Region("warm", "mountains", 8)]
+regions[random.randrange(0, 8)].item = "Bag of gold"
+
+
+def player_move(direction, player):  # Returns new region value for player
+    if illegal_move(direction, player.region):  # Check for illegal move
+        draw.draw_text("There's nothing but open water that way, try somewhere else!")
+        sound.play_sound("dialogue/nothing.wav")
+        return_on_event("sound")
     else:
         if direction == 1:
-            player_region -= 3  # North
-        if direction == 2:
-            player_region -= 1  # West
-        if direction == 3:
-            player_region += 3  # South
-        if direction == 4:
-            player_region += 1  # East
-        print("You start walking")
-        sound.playSound("dialouge/walking.wav")
-        return player_region
+            player.region -= 3  # North
+        elif direction == 2:
+            player.region -= 1  # West
+        elif direction == 3:
+            player.region += 3  # South
+        elif direction == 4:
+            player.region += 1  # East
+        draw.draw_text("You start walking.")
+        sound.play_sound("dialogue/walking.wav")
 
 
-def illegal_move(direction, player_region):  # Check for illegal movement
-    if player_region < 3 and direction == 1:  # Illegal move north
+def illegal_move(direction, region):  # Check for illegal movement
+    if region < 3 and direction == 1:  # Illegal move north
         return True
-    if player_region % 3 == 0 and direction == 2:  # Illegal move west
+    if region % 3 == 0 and direction == 2:  # Illegal move west
         return True
-    if player_region > 5 and direction == 3:  # Illegal move south
+    if region > 5 and direction == 3:  # Illegal move south
         return True
-    if player_region > 5 and direction == 4:  # Illegal move east
+    if region > 5 and direction == 4:  # Illegal move east
         return True
     return False
 
 
-def welcome():
-    sound.playSoundtrack("audio/soundtrack/")
-    print("Welcome player! You find yourself stranded at an unknown location, feel free to explore!")
-    print("Please enter your name.")
-    sound.playSound("dialouge/welcome.wav")
-    name = input()
-    return name
-
-
-def request_player_action():
-    while 1:
-        sound.playSound("dialouge/action.wav", block=False)
-        print("Choose an action: \n [1] Move north \n [2] Move west \n [3] Move south \n [4] Move east "
-              "\n [5] Look around")
-        action = input()
-        if 0 < int(action) < 6:
-            return int(action)
-        else:
-
-            print("Invalid input, please input a number from 1 to 5")
-            sound.playSound("dialouge/invalid.wav")
-
-
-def look(region, gold, shop_keeper):
+def look(region, player):
+    sounds = [""] * 3
+    region = region[player.region]
     description = "You find yourself in a " + region.climate + ", "
-    sound.queueSound("dialouge/yourself.wav")
+    sounds[0] = "dialogue/yourself.wav"
     if region.climate == "cold":
-        sound.queueSound("dialouge/cold.wav")
+        sounds[1] = "dialogue/cold.wav"
     elif region.climate == "fair":
-        sound.queueSound("dialouge/fair.wav")
+        sounds[1] = "dialogue/fair.wav"
     elif region.climate == "warm":
-        sound.queueSound("dialouge/warm.wav")
+        sounds[1] = "dialogue/warm.wav"
 
     if region.texture == "open":
         description += "open landscape. "
-        sound.queueSound("dialouge/open.wav")
+        sounds[2] = "dialogue/open.wav"
     elif region.texture == "forrest":
         description += 'green forrest. '
-        sound.queueSound("dialouge/forest.wav")
+        sounds[2] = "dialogue/forrest.wav"
     elif region.texture == "mountains":
         description += "region of mountains."
-        sound.queueSound("dialouge/mountain.wav")
-    print(description)
-    sound.playQueue()
+        sounds[2] = "dialogue/mountain.wav"
+    draw.draw_text(description)
 
-    if gold == 0 and region.item != 0:
-        print("You also see something shimmering beneath some rocks; you find a bag of gold!")
-        sound.playSound("dialouge/gold.wav")
-        gold = 1
-    if shop_keeper == region.location:
-        print("Hey, there is another person here! He promises to get you home for a bag of gold")
-        sound.playSound("dialouge/person.wav")
-    return gold
+    for i in sounds:
+        if i != "":
+            sound.play_sound(i)
+            return_on_event("sound")
+
+    if player.gold == 0 and region.item != 0:
+        draw.draw_text("You also see something shimmering beneath some rocks."
+                       "\nYou find a bag of gold!")
+        sound.play_sound("dialogue/gold.wav")
+        return_on_event("sound")
+        player.gold = 1
+    if player.region_shop_keeper == region.location:
+        draw.draw_text("Hey, there is another person here!\n"
+                       "He promises to get you home for a bag of gold.")
+        sound.play_sound("dialogue/person.wav")
+        return_on_event("sound")
 
 
-regions = [Region("cold", "open", 0), Region("cold", "forrest", 1), Region("cold", "mountains", 2),
-           Region("fair", "open", 3), Region("fair", "forrest", 4), Region("fair", "mountains", 5),
-           Region("warm", "open", 6), Region("warm", "forrest", 7), Region("warm", "mountains", 8)]
+def return_on_event(return_event, text=""):
+    while True:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                quit()
 
-currentRegion = 4
-regions[random.randrange(0, 8)].item = "Bag of gold"
-shopKeeperRegion = random.randrange(0, 8)
-playerGold = 0
+            elif event.type == pg.KEYDOWN and return_event == "string":
+                if event.key == pg.K_BACKSPACE:
+                    text = text[:-1]
+                else:
+                    text += event.unicode
+                if event.key == pg.K_RETURN and text:
+                    # draw.draw_text(text)  # Return checked last because
+                    return text  # multiple presses can occur in one frame
+        if not sound.is_playing() and return_event == "sound":
+            return text
 
-sound = audio.SoundEngine()
-print("\n\n")
-player_name = welcome()
-print("Hello " + player_name)
+        draw.draw_input_box(text)
+        draw.update()
+        clock.tick(30)
 
-while 1:
-    # screen.blit(island)
-    player_action = request_player_action()
-    if int(player_action) < 5:
-        currentRegion = player_move(player_action, regions[currentRegion].location)
-        print(currentRegion)
-    else:
-        playerGold = look(regions[currentRegion], playerGold, shopKeeperRegion)
-        if currentRegion == shopKeeperRegion and playerGold == 1:
-            print("You hand over the bag of gold and the magic shopkeeper throws powder in the air and with colorful "
-                  "sparks you escape the island. Congratulations " + player_name + "!")
-            sound.playSound("dialouge/escape.wav")
-            print("\n\nLead Programmer & Designer: Axel Söderberg\n"
-                  "Audio & Programming: Tintin Axelsson\n"
-                  "Voice Acting: Eric Ryberg")
-            break
+
+def main():
+    myplayer = Player()
+    game_over = False
+
+    draw.draw_background()
+    draw.draw_text_box()
+    draw.update()
+    sound.play_soundtrack("soundtrack/")
+
+    sound.play_sound("dialogue/welcome.wav")
+    draw.draw_text("Welcome player!"
+                   "\nYou find yourself stranded at an unknown location, feel free to explore!"
+                   "\nPlease enter your name.")
+    input_text = return_on_event("sound")
+    myplayer.name = return_on_event("string", input_text)
+
+    while not game_over:
+        sound.play_sound("dialogue/action.wav")
+        draw.draw_text("Choose an action: \n [1] Move north \n [2] Move west \n [3] Move south \n [4] Move east "
+                       "\n [5] Look around")
+        return_on_event("sound")
+        try:
+            action = int(float(return_on_event("string")))
+        except:
+            action = -1
+
+        if not 0 < action < 6:
+            draw.draw_text("Invalid input, please input a number from 1 to 5")
+            sound.play_sound("dialogue/invalid.wav")
+            return_on_event("sound")
+        else:
+            if action == 5:
+                look(regions, myplayer)
+                if myplayer.region == myplayer.region_shop_keeper and myplayer.gold:
+                    draw.draw_text(
+                        "You hand over the bag of gold and the magic shopkeeper throws powder in the air with "
+                        "colorful sparks. "
+                        "\nAnd you escape the island."
+                        "\nCongratulations " + myplayer.name + "!")
+                    sound.play_sound("dialogue/escape.wav")
+                    return_on_event("sound")
+                    draw.draw_text(" \n \nLead Programmer & Designer: Axel Söderberg\n"
+                                   "Audio & Programming: Tintin Axelsson\n"
+                                   "Voice Acting: Eric Ryberg")
+                    game_over = True
+            else:
+                player_move(action, myplayer)
+                return_on_event("sound")
+    return_on_event("text")
+
+
+if __name__ == '__main__':
+    main()

@@ -1,6 +1,3 @@
 # Island Game
 
---Required packages--\
-Random\
-Playsound\
-pynput
+Now with graphics!
